@@ -283,6 +283,22 @@ class _html2text(HTMLParser.HTMLParser):
         self.outtext += s
         self.lastWasNL = self.outtext[-1] == '\n'
     
+    def code_lines_to_block(self):
+        lines = self.outtext.split('\n')
+        in_code_block = False
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if len(stripped) >= 2 and stripped.startswith('`') and stripped.endswith('`') and not '`' in stripped[1:-1]:
+                lines[i] = '    ' + stripped[1:-1]
+                if not in_code_block and i > 0 and lines[i-1].strip() != '':
+                    lines[i] = '\n' + lines[i]
+                in_code_block = True
+            else:
+                if in_code_block and stripped != '':
+                    lines[i] = '\n' + lines[i]
+                in_code_block = False
+        self.outtext = '\n'.join(lines)
+
     def close(self):
         HTMLParser.HTMLParser.close(self)
         
@@ -290,7 +306,12 @@ class _html2text(HTMLParser.HTMLParser):
         self.o('', 0, 'end')
 
         if options.google_doc:
+            # keep non-breaking spaces
             self.outtext = self.outtext.replace('&nbsp_place_holder;', ' ');
+
+            # convert code-only lines to a code block
+            if options.convert_code_lines:
+                self.code_lines_to_block()
         
         return self.outtext
         
@@ -707,6 +728,8 @@ if __name__ == "__main__":
         default=GOOGLE_LIST_INDENT, help="number of pixels Google indents nested lists")
     p.add_option("-s", "--hide-strikethrough", action="store_true", dest="hide_strikethrough",
         default=False, help="hide strike-through text. only relevent when -g is specified as well")
+    p.add_option("-c", "--convert-code-lines", action="store_true", dest="convert_code_lines",
+        default=False, help="convert lines containing only code to a code block")
     (options, args) = p.parse_args()
 
     # handle options

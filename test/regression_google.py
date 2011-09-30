@@ -27,6 +27,8 @@ if __name__ == "__main__":
         default=GOOGLE_LIST_INDENT, help="number of pixels Google indents nested lists")
     p.add_option("-s", "--hide-strikethrough", action="store_true", dest="hide_strikethrough",
         default=False, help="hide strike-through text. only relevent when -g is specified as well")
+    p.add_option("-c", "--convert-code-lines", action="store_true", dest="convert_code_lines",
+        default=False, help="convert lines containing only code to a code block")
     (options, args) = p.parse_args()
 
     # handle options
